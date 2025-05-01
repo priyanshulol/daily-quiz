@@ -31,7 +31,9 @@
     };
 
     const USED_KEY = 'usedQuestions';
+    const STATUS_KEY = 'questionStatus'; // Store the status (Done/Not Done)
     const usedQuestions = JSON.parse(localStorage.getItem(USED_KEY) || '{}');
+    const questionStatus = JSON.parse(localStorage.getItem(STATUS_KEY) || '{}');
 
     function getUniqueQuestions(count) {
       const all = [];
@@ -57,13 +59,35 @@
       questions.forEach((q, i) => {
         const card = document.createElement('div');
         card.className = 'question-card';
+        const status = questionStatus[q.question] || 'Not Done'; // Get the status from localStorage
         card.innerHTML = `
           <strong>Q${i + 1} (${q.chapter}):</strong><br>${q.question}<br>
-          <button class="done-btn">Done</button>
-          <button class="notdone-btn">Not Done</button>
+          <button class="done-btn" data-question="${q.question}" ${status === 'Done' ? 'disabled' : ''}>Done</button>
+          <button class="notdone-btn" data-question="${q.question}" ${status === 'Not Done' ? 'disabled' : ''}>Not Done</button>
         `;
         container.appendChild(card);
       });
+
+      // Add event listeners for buttons
+      const doneButtons = document.querySelectorAll('.done-btn');
+      const notDoneButtons = document.querySelectorAll('.notdone-btn');
+
+      doneButtons.forEach(btn => btn.addEventListener('click', markAsDone));
+      notDoneButtons.forEach(btn => btn.addEventListener('click', markAsNotDone));
+    }
+
+    function markAsDone(e) {
+      const question = e.target.getAttribute('data-question');
+      questionStatus[question] = 'Done';
+      localStorage.setItem(STATUS_KEY, JSON.stringify(questionStatus));
+      renderQuiz(getUniqueQuestions(5)); // Re-render after status update
+    }
+
+    function markAsNotDone(e) {
+      const question = e.target.getAttribute('data-question');
+      questionStatus[question] = 'Not Done';
+      localStorage.setItem(STATUS_KEY, JSON.stringify(questionStatus));
+      renderQuiz(getUniqueQuestions(5)); // Re-render after status update
     }
 
     function updateUsedQuestions(questions) {
@@ -97,3 +121,4 @@
   </script>
 </body>
 </html>
+
