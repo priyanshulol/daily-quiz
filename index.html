@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; margin: 0; }
+    .question-card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .done-btn, .notdone-btn { margin: 5px; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .done-btn { background: #4caf50; color: white; }
+    .notdone-btn { background: #f44336; color: white; }
+    #timer { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Daily Quiz</h1>
+  <div id="timer">Timer: 30:00</div>
+  <div id="quiz"></div>
+
+  <script>
+    const questionPool = {
+      "Building Materials": {
+        "Cement": Array.from({ length: 92 }, (_, i) => `Cement Q${i + 1}`),
+        "Mortar": Array.from({ length: 35 }, (_, i) => `Mortar Q${i + 1}`)
+      },
+      "Fluid Mechanics": {
+        "Bernoulli's Principle": Array.from({ length: 12 }, (_, i) => `Bernoulli Q${i + 1}`),
+        "Flow Through Pipes": Array.from({ length: 8 }, (_, i) => `Pipes Q${i + 1}`)
+      }
+    };
+
+    const USED_KEY = 'usedQuestions';
+    const usedQuestions = JSON.parse(localStorage.getItem(USED_KEY) || '{}');
+
+    function getUniqueQuestions(count) {
+      const all = [];
+      for (const subject in questionPool) {
+        for (const chapter in questionPool[subject]) {
+          const chapterKey = `${subject} > ${chapter}`;
+          const used = usedQuestions[chapterKey] || [];
+          const available = questionPool[subject][chapter].filter(q => !used.includes(q));
+          available.forEach(q => all.push({ chapter: chapterKey, question: q }));
+        }
+      }
+      const selected = [];
+      while (selected.length < count && all.length > 0) {
+        const idx = Math.floor(Math.random() * all.length);
+        selected.push(all.splice(idx, 1)[0]);
+      }
+      return selected;
+    }
+
+    function renderQuiz(questions) {
+      const container = document.getElementById('quiz');
+      container.innerHTML = '';
+      questions.forEach((q, i) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.innerHTML = `
+          <strong>Q${i + 1} (${q.chapter}):</strong><br>${q.question}<br>
+          <button class="done-btn">Done</button>
+          <button class="notdone-btn">Not Done</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function updateUsedQuestions(questions) {
+      questions.forEach(q => {
+        const list = usedQuestions[q.chapter] || [];
+        if (!list.includes(q.question)) list.push(q.question);
+        usedQuestions[q.chapter] = list;
+      });
+      localStorage.setItem(USED_KEY, JSON.stringify(usedQuestions));
+    }
+
+    function startTimer(duration, display) {
+      let timer = duration;
+      const interval = setInterval(() => {
+        const minutes = Math.floor(timer / 60);
+        const seconds = timer % 60;
+        display.textContent = `Timer: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        if (--timer < 0) {
+          clearInterval(interval);
+          alert("Time's up!");
+        }
+      }, 1000);
+    }
+
+    const todayQuestions = getUniqueQuestions(5);
+    renderQuiz(todayQuestions);
+    updateUsedQuestions(todayQuestions);
+
+    const timerDisplay = document.getElementById('timer');
+    startTimer(30 * 60, timerDisplay);
+  </script>
+</body>
+</html>
