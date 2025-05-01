@@ -9,8 +9,10 @@
     .question-card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .done-btn, .notdone-btn { margin: 5px; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .done-btn { background: #4caf50; color: white; }
+    .done-btn.disabled { background: #ccc; color: #666; cursor: not-allowed; }
     .notdone-btn { background: #f44336; color: white; }
     #timer { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: #333; }
+    .collapsed { display: none; }
   </style>
 </head>
 <body>
@@ -61,7 +63,7 @@
         card.className = 'question-card';
         const status = questionStatus[q.question] || 'Not Done'; // Get the status from localStorage
         card.innerHTML = `
-          <strong>Q${i + 1} (${q.chapter}):</strong><br>${q.question}<br>
+          <strong>Q${i + 1} (${q.chapter}):</strong><br><span id="question-${q.question}">${q.question}</span><br>
           <button class="done-btn" data-question="${q.question}" ${status === 'Done' ? 'disabled' : ''}>Done</button>
           <button class="notdone-btn" data-question="${q.question}" ${status === 'Not Done' ? 'disabled' : ''}>Not Done</button>
         `;
@@ -80,6 +82,10 @@
       const question = e.target.getAttribute('data-question');
       questionStatus[question] = 'Done';
       localStorage.setItem(STATUS_KEY, JSON.stringify(questionStatus));
+      
+      // Disable the Done button, change its style to grey and collapse the question
+      e.target.classList.add('disabled');
+      e.target.closest('.question-card').querySelector(`#question-${question}`).classList.add('collapsed');
       renderQuiz(getUniqueQuestions(5)); // Re-render after status update
     }
 
@@ -87,6 +93,9 @@
       const question = e.target.getAttribute('data-question');
       questionStatus[question] = 'Not Done';
       localStorage.setItem(STATUS_KEY, JSON.stringify(questionStatus));
+      
+      // Disable the Not Done button (optional)
+      e.target.classList.add('disabled');
       renderQuiz(getUniqueQuestions(5)); // Re-render after status update
     }
 
@@ -121,4 +130,5 @@
   </script>
 </body>
 </html>
+
 
